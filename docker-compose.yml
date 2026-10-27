@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: bioaula_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-bioaula-prod-secret-change-me-32chars}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-bioaula-prod-jwt-change-me-32chars}
+      - DATABASE_URL=sqlite:////app/instance/bioaula.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - bioaula_data:/app/instance
+      - chroma_data:/app/data/chroma
+
+volumes:
+  bioaula_data:
+  chroma_data:

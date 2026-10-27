@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioAula · Plataforma Educativa Impulsada con IA</title>
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<!-- ── Toast global ───────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     PANTALLA DE CONFIGURACIÓN INICIAL
+     ══════════════════════════════════════════════════════ -->
+<div id="setup-screen" class="setup-screen">
+  <div class="setup-logo">BioAula</div>
+  <p class="setup-tagline">
+    Plataforma educativa con IA · El profesor sube material, la IA genera pruebas
+    únicas para cada estudiante y analiza el desempeño del grupo
+  </p>
+
+  <div class="setup-card">
+    <div class="setup-steps">
+      <div class="step">
+        <div class="step-n">1</div>
+        <span>Ve a <a href="https://aistudio.google.com/apikey" target="_blank" class="api-link">aistudio.google.com/apikey</a> y crea una API Key gratuita de Gemini</span>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <span>El plan gratuito incluye Gemini 2.5 Flash con 1 millón de tokens de contexto</span>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <span>Pega tu API Key aquí — se guarda solo en tu navegador</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>API Key de Gemini</label>
+      <input type="password" id="apikey-input" placeholder="AIza...">
+      <p class="api-note">La clave se guarda solo en localStorage. Nunca se envía a servidores externos.</p>
+    </div>
+
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn btn-primary" style="width:100%"
+        onclick="BioAula.saveApiKey()">Entrar con API Key →</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn" style="width:100%;font-size:13px"
+        onclick="BioAula.continueWithoutKey()">Continuar como invitado / estudiante →</button>
+    </div>
+
+    <p style="text-align:center;margin-top:1.25rem;font-size:13px;color:var(--text3)">
+      ¿Ya tienes cuenta?
+      <a href="/login" style="color:var(--accent);text-decoration:none;font-weight:500;">Iniciar sesión</a>
+      ·
+      <a href="/register" style="color:var(--text2);text-decoration:none;">Crear cuenta</a>
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     APP PRINCIPAL
+     ══════════════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <!-- ── Navegación ──────────────────────────────────── -->
+  <nav>
+    <div class="nav-logo">Bio<span>Aula</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="BioAula.switchView('profesor')" id="tab-prof">Profesor</button>
+      <button class="nav-tab" onclick="BioAula.switchView('estadisticas')" id="tab-stats">
+        Estadísticas
+        <span class="nav-badge" id="stats-badge" style="display:none">0</span>
+      </button>
+      <button class="nav-tab" onclick="BioAula.switchView('estudiante')" id="tab-est">
+        Estudiante
+        <span class="nav-badge" id="quiz-badge" style="display:none">Lista</span>
+      </button>
+      <button class="nav-tab" onclick="BioAula.switchView('admin')" id="tab-admin" style="display:none">Admin</button>
+      <button class="nav-tab" onclick="BioAula.switchView('config')" id="tab-cfg">⚙</button>
+    </div>
+    <div class="nav-user" id="nav-user">
+      <span id="nav-user-name" style="font-size:13px;color:var(--text2);margin-right:8px;display:none"></span>
+      <a href="/login" id="nav-login-link" style="font-size:13px;color:var(--accent);text-decoration:none;font-weight:500;">Iniciar sesión</a>
+      <span id="nav-auth-sep" style="color:var(--text3);margin:0 6px;display:none">·</span>
+      <a href="/register" id="nav-register-link" style="font-size:13px;color:var(--text3);text-decoration:none;display:none;">Registro</a>
+      <button id="nav-logout-btn" style="display:none;background:none;border:none;color:var(--danger);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 10px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(248,113,113,0.1)'" onmouseout="this.style.background='transparent'" onclick="BioAula.authLogout()">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ══ VISTA: PROFESOR ══════════════════════════════ -->
+    <div class="section active" id="view-profesor">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">📚</div>
+          <div>
+            <div class="card-title">Configurar prueba</div>
+            <div class="card-sub">Sube el material y configura los parámetros</div>
+          </div>
+        </div>
+
+        <!-- Parámetros principales -->
+        <div class="field-grid-2">
+          <div class="field" style="margin:0">
+            <label>Tema de la clase</label>
+            <input type="text" id="topic" placeholder="Ej: Mitosis y división celular">
+          </div>
+          <div class="field" style="margin:0">
+            <label>Nivel</label>
+            <select id="nivel">
+              <option value="bachillerato">Bachillerato (10-11)</option>
+              <option value="secundaria">Secundaria (6-9)</option>
+              <option value="universitario">Universitario</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-grid-2" style="margin-top:12px">
+          <div class="field" style="margin:0">
+            <label>Preguntas por estudiante</label>
+            <select id="num-questions">
+              <option value="5">5 preguntas</option>
+              <option value="8">8 preguntas</option>
+              <option value="10" selected>10 preguntas</option>
+              <option value="15">15 preguntas</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0">
+            <label>Banco total de preguntas</label>
+            <select id="bank-size">
+              <option value="20">20 (pool pequeño)</option>
+              <option value="30" selected>30 (recomendado)</option>
+              <option value="40">40 (máxima variedad)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Tabs de material -->
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="BioAula.switchMatTab('texto')">Texto / Apuntes</button>
+          <button class="inner-tab" onclick="BioAula.switchMatTab('archivos')">Archivos</button>
+          <button class="inner-tab" onclick="BioAula.switchMatTab('urls')">URLs / YouTube</button>
+        </div>
+
+        <!-- Panel: Texto -->
+        <div class="inner-panel active" id="mat-texto">
+          <div class="field" style="margin:0">
+            <textarea id="material-text"
+              placeholder="Pega aquí el contenido de la clase, resúmenes, apuntes, texto del libro...&#10;Mientras más detallado, mejor será la prueba generada."
+              style="min-height:130px"></textarea>
+          </div>
+        </div>
+
+        <!-- Panel: Archivos -->
+        <div class="inner-panel" id="mat-archivos">
+          <div class="alert alert-info">
+            Soporta PDF, Word (.docx), TXT, imágenes (PNG/JPG). El contenido se extrae y envía a Gemini.
+          </div>
+          <div class="upload-zone" id="upload-zone"
+            onclick="document.getElementById('file-input').click()"
+            ondragover="BioAula.onDragOver(event)"
+            ondrop="BioAula.onDrop(event)"
+            ondragleave="BioAula.onDragLeave()">
+            <input type="file" id="file-input" multiple
+              accept=".pdf,.txt,.docx,.doc,.png,.jpg,.jpeg,.md,.csv"
+              onchange="BioAula.handleFiles(this)">
+            <div style="font-size:24px;margin-bottom:6px">📎</div>
+            <div style="font-size:14px;color:var(--text2);font-weight:500">Arrastra archivos aquí o haz clic</div>
+            <span class="upload-label">PDF · Word · TXT · Imágenes</span>
+          </div>
+          <div id="file-list"></div>
+        </div>
+
+        <!-- Panel: URLs -->
+        <div class="inner-panel" id="mat-urls">
+          <div class="field" style="margin:0">
+            <label>URLs separadas por coma (YouTube, artículos web)</label>
+            <textarea id="urls"
+              placeholder="https://youtube.com/watch?v=...&#10;https://es.wikipedia.org/wiki/Mitosis"
+              style="min-height:80px"></textarea>
+          </div>
+        </div>
+
+        <!-- Botón de generación -->
+        <div class="btn-row">
+          <button class="btn btn-primary" id="gen-btn" onclick="BioAula.generateAll()">
+            <span class="dots" id="gen-dots" style="display:none">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </span>
+            <span id="gen-label">Generar banco de preguntas + apoyo →</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Output del profesor (generado dinámicamente) -->
+      <div id="prof-output"></div>
+
+      <!-- Evaluaciones guardadas del profesor -->
+      <div class="card" id="my-quizzes-card" style="margin-top:1.5rem">
+        <div class="card-header" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="card-icon">📁</div>
+            <div>
+              <div class="card-title">Mis pruebas creadas</div>
+              <div class="card-sub">Consulta, activa y comparte tus evaluaciones anteriores</div>
+            </div>
+          </div>
+          <button class="btn btn-sm" onclick="BioAula.loadTeacherQuizzes()">🔄 Actualizar lista</button>
+        </div>
+        <div id="my-quizzes-list">
+          <p style="color:var(--text3);font-size:13px;padding:8px 0">Inicia sesión como profesor para ver tus evaluaciones guardadas en la nube.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VISTA: ESTADÍSTICAS ═══════════════════════════ -->
+    <div class="section" id="view-estadisticas">
+      <div id="stats-empty" class="card" style="text-align:center;padding:3rem">
+        <div style="font-size:40px;opacity:0.3;margin-bottom:12px">📊</div>
+        <p style="color:var(--text3);font-size:14px">
+          Aún no hay estudiantes que hayan completado la prueba.<br>
+          Las estadísticas aparecerán aquí automáticamente.
+        </p>
+      </div>
+      <div id="stats-content" style="display:none">
+        <div id="stats-summary"></div>
+        <div id="stats-students"></div>
+        <div id="stats-topics"></div>
+        <div id="stats-ai-analysis"></div>
+      </div>
+    </div>
+
+    <!-- ══ VISTA: ESTUDIANTE ═════════════════════════════ -->
+    <div class="section" id="view-estudiante">
+
+      <!-- Formulario de inicio -->
+      <div id="student-start">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🎓</div>
+            <div>
+              <div class="card-title">Tu prueba personalizada</div>
+              <div class="card-sub">Cada estudiante recibe un conjunto único de preguntas del banco</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Tu nombre completo</label>
+            <input type="text" id="student-name" placeholder="Ej: Laura García Ruiz">
+          </div>
+          <div class="field">
+            <label>Número de documento</label>
+            <input type="text" id="student-doc" placeholder="Ej: 1098765432" inputmode="numeric">
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="BioAula.startQuiz()">Comenzar prueba →</button>
+          </div>
+        </div>
+
+        <!-- Material de estudio (cargado dinámicamente) -->
+        <div id="study-material-preview"></div>
+      </div>
+
+      <!-- Contenedor del quiz activo -->
+      <div id="quiz-container" style="display:none">
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar" id="progress-bar" style="width:0%"></div>
+        </div>
+        <div id="question-area"></div>
+      </div>
+
+      <!-- Resultados (cargados dinámicamente) -->
+      <div id="results-container" style="display:none"></div>
+    </div>
+
+    <!-- ══ VISTA: ADMIN ═════════════════════════════════ -->
+    <div class="section" id="view-admin">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">🛠️</div>
+          <div>
+            <div class="card-title">Panel de administración</div>
+            <div class="card-sub">Gestión de la plataforma</div>
+          </div>
+        </div>
+        <div id="admin-dashboard"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">👥</div>
+          <div>
+            <div class="card-title">Usuarios</div>
+            <div class="card-sub">Administra profesores, estudiantes y administradores</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+          <input type="text" id="admin-search" placeholder="🔍 Buscar por nombre o correo..." style="flex:1;min-width:200px" oninput="BioAula.onAdminFilter()">
+          <select id="admin-filter-role" style="width:160px" onchange="BioAula.onAdminFilter()">
+            <option value="">Todos los roles</option>
+            <option value="profesor">Profesores</option>
+            <option value="estudiante">Estudiantes</option>
+            <option value="admin">Administradores</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="BioAula.openCreateUserModal()">+ Nuevo usuario</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="admin-table" id="admin-users-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Fecha de creación</th>
+                <th style="width:90px">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:2rem">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VISTA: CONFIGURACIÓN ══════════════════════════ -->
+    <div class="section" id="view-config">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">🔑</div>
+          <div>
+            <div class="card-title">Configuración</div>
+            <div class="card-sub">API Key y datos guardados</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>API Key de Gemini</label>
+          <input type="password" id="apikey-edit" placeholder="AIza...">
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="BioAula.updateApiKey()">Guardar →</button>
+          <button class="btn" style="color:var(--warn);border-color:rgba(251,191,36,0.3)"
+            onclick="BioAula.clearResults()">Borrar resultados</button>
+          <button class="btn" style="color:var(--danger);border-color:rgba(248,113,113,0.3)"
+            onclick="BioAula.clearAll()">Borrar todo</button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="powered">
+          <div class="gem-dot"></div>
+          Powered by Gemini 2.5 Flash · 1M tokens · Plan gratuito de Google AI Studio
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /#app -->
+
+<!-- ── Modal de usuario (admin) ───────────────────── -->
+<div class="modal-overlay" id="admin-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="admin-modal-title">Crear usuario</h3>
+      <button class="modal-close" onclick="BioAula.closeUserModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" id="admin-modal-name" placeholder="Nombre completo">
+      </div>
+      <div class="field">
+        <label>Correo</label>
+        <input type="email" id="admin-modal-email" placeholder="correo@ejemplo.com">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="admin-modal-password" placeholder="Mínimo 8 caracteres">
+      </div>
+      <div class="field">
+        <label>Rol</label>
+        <select id="admin-modal-role">
+          <option value="admin">Administrador</option>
+          <option value="profesor">Profesor</option>
+          <option value="estudiante" selected>Estudiante</option>
+        </select>
+      </div>
+      <p class="modal-error" id="admin-modal-error" style="display:none"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="BioAula.closeUserModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="BioAula.saveUser()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Módulo JS principal ─────────────────────────── -->
+<script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>
