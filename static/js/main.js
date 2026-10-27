@@ -85,7 +85,7 @@ async function checkStudentMode() {
   state.studentMode = true;
 
   document.getElementById('setup-screen').style.display = 'none';
-  document.getElementById('app').style.display          = 'block';
+  document.getElementById('app').style.display          = 'flex';
 
   ['tab-prof', 'tab-stats', 'tab-admin', 'tab-cfg'].forEach(id => {
     const el = document.getElementById(id);

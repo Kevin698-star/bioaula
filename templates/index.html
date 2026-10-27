@@ -68,36 +68,63 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════
-     APP PRINCIPAL
+     APP PRINCIPAL  (escritorio tipo aplicación nativa)
      ══════════════════════════════════════════════════════ -->
-<div id="app" style="display:none">
+<div id="app" class="app-shell" style="display:none">
+  <div class="app-window">
 
-  <!-- ── Navegación ──────────────────────────────────── -->
-  <nav>
-    <div class="nav-logo">Bio<span>Aula</span></div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="BioAula.switchView('profesor')" id="tab-prof">Profesor</button>
-      <button class="nav-tab" onclick="BioAula.switchView('estadisticas')" id="tab-stats">
-        Estadísticas
-        <span class="nav-badge" id="stats-badge" style="display:none">0</span>
-      </button>
-      <button class="nav-tab" onclick="BioAula.switchView('estudiante')" id="tab-est">
-        Estudiante
-        <span class="nav-badge" id="quiz-badge" style="display:none">Lista</span>
-      </button>
-      <button class="nav-tab" onclick="BioAula.switchView('admin')" id="tab-admin" style="display:none">Admin</button>
-      <button class="nav-tab" onclick="BioAula.switchView('config')" id="tab-cfg">⚙</button>
-    </div>
-    <div class="nav-user" id="nav-user">
-      <span id="nav-user-name" style="font-size:13px;color:var(--text2);margin-right:8px;display:none"></span>
-      <a href="/login" id="nav-login-link" style="font-size:13px;color:var(--accent);text-decoration:none;font-weight:500;">Iniciar sesión</a>
-      <span id="nav-auth-sep" style="color:var(--text3);margin:0 6px;display:none">·</span>
-      <a href="/register" id="nav-register-link" style="font-size:13px;color:var(--text3);text-decoration:none;display:none;">Registro</a>
-      <button id="nav-logout-btn" style="display:none;background:none;border:none;color:var(--danger);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 10px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(248,113,113,0.1)'" onmouseout="this.style.background='transparent'" onclick="BioAula.authLogout()">Cerrar sesión</button>
-    </div>
-  </nav>
+    <header class="app-titlebar">
+      <div class="app-traffic" aria-hidden="true">
+        <span class="tl tl-close"></span>
+        <span class="tl tl-min"></span>
+        <span class="tl tl-max"></span>
+      </div>
+      <div class="app-window-title">BioAula Studio · Laboratorio de evaluaciones</div>
+      <div class="nav-user" id="nav-user">
+        <span id="nav-user-name" style="font-size:12px;color:var(--text2);margin-right:8px;display:none"></span>
+        <a href="/login" id="nav-login-link" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:500;">Iniciar sesión</a>
+        <span id="nav-auth-sep" style="color:var(--text3);margin:0 6px;display:none">·</span>
+        <a href="/register" id="nav-register-link" style="font-size:12px;color:var(--text3);text-decoration:none;display:none;">Registro</a>
+        <button id="nav-logout-btn" style="display:none;background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 10px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(248,113,113,0.1)'" onmouseout="this.style.background='transparent'" onclick="BioAula.authLogout()">Cerrar sesión</button>
+      </div>
+    </header>
 
-  <main>
+    <div class="app-body">
+      <aside class="app-sidebar">
+        <div class="nav-logo">Bio<span>Aula</span></div>
+        <p class="sidebar-kicker">Módulos</p>
+        <nav class="nav-tabs" aria-label="Módulos de BioAula">
+          <button class="nav-tab active" onclick="BioAula.switchView('profesor')" id="tab-prof">
+            <span class="nav-tab-ico">📚</span>
+            <span class="nav-tab-label">Profesor</span>
+          </button>
+          <button class="nav-tab" onclick="BioAula.switchView('estadisticas')" id="tab-stats">
+            <span class="nav-tab-ico">📊</span>
+            <span class="nav-tab-label">Estadísticas</span>
+            <span class="nav-badge" id="stats-badge" style="display:none">0</span>
+          </button>
+          <button class="nav-tab" onclick="BioAula.switchView('estudiante')" id="tab-est">
+            <span class="nav-tab-ico">🎓</span>
+            <span class="nav-tab-label">Estudiante</span>
+            <span class="nav-badge" id="quiz-badge" style="display:none">Lista</span>
+          </button>
+          <button class="nav-tab" onclick="BioAula.switchView('admin')" id="tab-admin" style="display:none">
+            <span class="nav-tab-ico">🛠️</span>
+            <span class="nav-tab-label">Admin</span>
+          </button>
+          <button class="nav-tab" onclick="BioAula.switchView('config')" id="tab-cfg">
+            <span class="nav-tab-ico">⚙</span>
+            <span class="nav-tab-label">Ajustes</span>
+          </button>
+        </nav>
+        <div class="sidebar-foot">
+          <span class="gem-dot"></span>
+          Gemini 2.5 Flash
+        </div>
+      </aside>
+
+      <div class="app-workspace">
+        <main>
 
     <!-- ══ VISTA: PROFESOR ══════════════════════════════ -->
     <div class="section active" id="view-profesor">
@@ -367,7 +394,10 @@
       </div>
     </div>
 
-  </main>
+        </main>
+      </div><!-- /.app-workspace -->
+    </div><!-- /.app-body -->
+  </div><!-- /.app-window -->
 </div><!-- /#app -->
 
 <!-- ── Modal de usuario (admin) ───────────────────── -->

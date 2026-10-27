@@ -92,7 +92,7 @@ export function refreshStatsBadge() {
 
 export function showApp() {
   document.getElementById('setup-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  document.getElementById('app').style.display = 'flex';
   const el = document.getElementById('apikey-edit');
   if (el) el.value = state.apiKey;
 }
